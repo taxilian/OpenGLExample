@@ -25,14 +25,18 @@ OpenGLExampleX11::~OpenGLExampleX11()
 
 bool OpenGLExampleX11::onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindowX11 *win)
 {
+    rThread = boost::thread(&OpenGLExampleX11::renderThread, this, win);
 }
 
 bool OpenGLExampleX11::onWindowDetached(FB::DetachedEvent *evt, FB::PluginWindowX11 *win)
 {
+    rThread.interrupt();
+    rThread.join();
 }
 
 void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
 {
+    FBLOG_WARN("", "Starting Render Thread");
     GdkGLConfigMode glconf = static_cast<GdkGLConfigMode>(
             GDK_GL_MODE_RGB |
             GDK_GL_MODE_DOUBLE |
