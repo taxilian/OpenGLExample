@@ -39,6 +39,8 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
 {
     gdk_threads_enter();
     FBLOG_WARN("", "Starting Render Thread");
+    int c = 0;
+    gdk_gl_init_check(&c, NULL);
 
     GtkWidget* drawing_area;
     drawing_area = gtk_drawing_area_new();
