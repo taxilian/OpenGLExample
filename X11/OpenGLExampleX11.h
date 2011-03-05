@@ -44,9 +44,10 @@ public:
     /** END EVENTDEF -- DON'T CHANGE THIS LINE **/
 
 private:
-    void renderThread(FB::PluginWindowX11* win);
+    void renderThread();
     boost::thread rThread;
     GdkGLConfig *glConfig;
+    GtkWidget* drawing_area;
 };
 
 
