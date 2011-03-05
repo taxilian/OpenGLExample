@@ -92,16 +92,16 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
             gdk_threads_enter();
             gboolean tmp = gdk_gl_drawable_gl_begin(gldrawable, glcontext);
             FBLOG_WARN("", "Setting current context to widget. glbegin was " << tmp);
-            gdk_gl_drawable_make_current(gldrawable, glcontext);
-            render();
             GdkGLDrawable *gld = gtk_widget_get_gl_drawable (drawing_area);
-            //FBLOG_INFO("", "Got drawable: " << gld);
-            if (gdk_gl_drawable_is_double_buffered (gld)) {
-                gdk_gl_drawable_swap_buffers (gld);
-            } else {
-                glFlush();
-            }
+            gdk_gl_drawable_make_current(gldrawable, glcontext);
+            //render();
             gdk_gl_drawable_gl_end(gldrawable);
+            //FBLOG_INFO("", "Got drawable: " << gld);
+            //if (gdk_gl_drawable_is_double_buffered (gld)) {
+                //gdk_gl_drawable_swap_buffers (gld);
+            //} else {
+                //glFlush();
+            //}
             gdk_flush();
             gdk_threads_leave();
             boost::this_thread::sleep(boost::posix_time::milliseconds(200));
