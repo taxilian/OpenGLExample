@@ -42,18 +42,18 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
 
     GtkWidget* drawing_area;
     drawing_area = gtk_drawing_area_new();
-    gtk_widget_set_size_request(drawing_area, win->getWindowWidth(), win->getWindowHeight());
+    gtk_widget_set_size_request(drawing_area, 500, 500);
 
     GdkGLConfigMode glconf = static_cast<GdkGLConfigMode>(
             GDK_GL_MODE_RGB |
             GDK_GL_MODE_DOUBLE |
             GDK_GL_MODE_DEPTH
             );
-    FBLOG_WARN("", "Trying to config");
-    glConfig = gdk_gl_config_new_by_mode(glconf);
-    FBLOG_WARN("", "Created config: " << glConfig);
-    if (!glConfig) {
-        FBLOG_WARN("", "Double-buffer didn't work. Trying single.");
+    //FBLOG_WARN("", "Trying to config");
+    //glConfig = gdk_gl_config_new_by_mode(glconf);
+    //FBLOG_WARN("", "Created config: " << glConfig);
+    //if (!glConfig) {
+        //FBLOG_WARN("", "Double-buffer didn't work. Trying single.");
         glconf = static_cast<GdkGLConfigMode>(
                 GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH
                 );
@@ -63,11 +63,11 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
             FBLOG_WARN("", "Couldn't initialize opengl. No idea why, sorry!");
             return;
         } else {
-            FBLOG_INFO("", "Double-buffer opengl");
+            FBLOG_INFO("", "Single-buffer opengl");
         }
-    } else {
-        FBLOG_INFO("", "Double-buffer opengl");
-    }
+    //} else {
+        //FBLOG_INFO("", "Double-buffer opengl");
+    //}
 
     FBLOG_WARN("", "Setting GL capability on Widget: " << drawing_area);
     gtk_widget_set_gl_capability (drawing_area,
@@ -86,22 +86,25 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
     FBLOG_WARN("", "Got GL Drawable: " << gldrawable);
 
     // Attach our OpenGL context to the widget
-    FBLOG_WARN("", "Setting current context to widget");
-    gdk_gl_drawable_make_current(gldrawable, glcontext);
     gdk_threads_leave();
     try {
         while (!boost::this_thread::interruption_requested()) {
             gdk_threads_enter();
+            gboolean tmp = gdk_gl_drawable_gl_begin(gldrawable, glcontext);
+            FBLOG_WARN("", "Setting current context to widget. glbegin was " << tmp);
+            gdk_gl_drawable_make_current(gldrawable, glcontext);
             render();
             GdkGLDrawable *gld = gtk_widget_get_gl_drawable (drawing_area);
-            FBLOG_INFO("", "Got drawable: " << gld);
+            //FBLOG_INFO("", "Got drawable: " << gld);
             if (gdk_gl_drawable_is_double_buffered (gld)) {
                 gdk_gl_drawable_swap_buffers (gld);
             } else {
                 glFlush();
             }
+            gdk_gl_drawable_gl_end(gldrawable);
+            gdk_flush();
             gdk_threads_leave();
-            boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         }
     } catch (const boost::thread_interrupted&) {
     }
