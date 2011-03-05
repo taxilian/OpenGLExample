@@ -26,21 +26,32 @@ OpenGLExampleX11::~OpenGLExampleX11()
 
 bool OpenGLExampleX11::onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindowX11 *win)
 {
+    FBLOG_WARN("", "AttachedEvent start");
     rThread = boost::thread(&OpenGLExampleX11::renderThread, this, win);
+    FBLOG_WARN("", "AttachedEvent end");
 }
 
 bool OpenGLExampleX11::onWindowDetached(FB::DetachedEvent *evt, FB::PluginWindowX11 *win)
 {
+    FBLOG_WARN("", "DetachedEvent start");
     rThread.interrupt();
     rThread.join();
+    FBLOG_WARN("", "DetachedEvent end");
 }
 
 void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
 {
+    // Initialize GTK/GDK on this thread
+
+    //boost::scoped_array<char> argv(new char[1][20]);
+    int argc = 0;
+    //strcpy(argv[0], "--sync");
+    //gboolean initSucceeded = gtk_init_check(&argc, argv.get());
+
     gdk_threads_enter();
     FBLOG_WARN("", "Starting Render Thread");
-    int c = 0;
-    gdk_gl_init_check(&c, NULL);
+    gboolean initSucceeded = gdk_gl_init_check(&argc, NULL);
+    FBLOG_WARN("", "gdk_gl_init_check returned " << initSucceeded);
 
     GtkWidget* drawing_area;
     drawing_area = gtk_drawing_area_new();
@@ -92,10 +103,10 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
     try {
         while (!boost::this_thread::interruption_requested()) {
             gdk_threads_enter();
-            gboolean tmp = gdk_gl_drawable_gl_begin(gldrawable, glcontext);
-            FBLOG_WARN("", "Setting current context to widget. glbegin was " << tmp);
             GdkGLDrawable *gld = gtk_widget_get_gl_drawable (drawing_area);
             gdk_gl_drawable_make_current(gldrawable, glcontext);
+            gboolean tmp = gdk_gl_drawable_gl_begin(gldrawable, glcontext);
+            FBLOG_WARN("", "Setting current context to widget. glbegin was " << tmp);
             //render();
             gdk_gl_drawable_gl_end(gldrawable);
             //FBLOG_INFO("", "Got drawable: " << gld);
@@ -110,6 +121,7 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
         }
     } catch (const boost::thread_interrupted&) {
     }
+    FBLOG_WARN("", "Thread stop signaled");
     // Shut down the opengl config and context objects
     if (glConfig) {
         g_object_unref(G_OBJECT(glConfig));
@@ -120,4 +132,5 @@ void OpenGLExampleX11::renderThread(FB::PluginWindowX11* win)
         g_object_unref(G_OBJECT(glContext));
         glContext = NULL;
     }
+    FBLOG_WARN("", "Thread stopping");
 }
